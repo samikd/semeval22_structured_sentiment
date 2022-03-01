@@ -102,6 +102,10 @@ if __name__ == "__main__":
                        "darmstadt_unis": "en"}
 
     dataset = os.path.basename(args.json_dir)
+
+    # Download stanza models
+    stanza.download(dataset_to_lang[dataset])
+
     nlp = stanza.Pipeline(dataset_to_lang[dataset],
                           processors='tokenize,pos,lemma,depparse',
                           tokenize_no_ssplit=True,

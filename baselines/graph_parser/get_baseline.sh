@@ -9,8 +9,9 @@ mkdir experiments
 # # Convert json files to conllu for training
 # # Currently only creates head_final, but you can
 # # experiment with other graph setups by expanding this section
-for DATASET in darmstadt_unis mpqa multibooked_ca multibooked_eu norec opener_es opener_en; do
-    python3 convert_to_conllu.py --json_dir ../../data/"$DATASET" --out_dir sentiment_graphs/"$DATASET" --setup head_final
+# for DATASET in darmstadt_unis mpqa multibooked_ca multibooked_eu norec opener_es opener_en; do
+for DATASET in norec; do
+    python convert_to_conllu.py --json_dir ../../data/"$DATASET" --out_dir sentiment_graphs/"$DATASET" --setup head_final
 done;
 
 # Download word vectors
@@ -28,7 +29,8 @@ cd ..
 fi
 
 # Iterate over datsets
-for DATASET in darmstadt_unis mpqa multibooked_ca multibooked_eu norec opener_es opener_en; do
+# for DATASET in darmstadt_unis mpqa multibooked_ca multibooked_eu norec opener_es opener_en; do
+for DATASET in norec; do
     mkdir logs/$DATASET;
     mkdir experiments/$DATASET;
     # Iterate over the graph setups (head_final, head_first, head_final-inside_label, head_final-inside_label-dep_edges, head_final-inside_label-dep_edges-dep_labels, etc)
