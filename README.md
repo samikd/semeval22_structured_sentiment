@@ -2,7 +2,7 @@
 
 This Github repository hosts the data and baseline models for the [SemEval-2022 shared task 10](https://competitions.codalab.org/competitions/33556) on structured sentiment. In this repository you will find the datasets, baselines, and other useful information on the shared task.
 
-# Experiment Pipeline
+# Run Experiment Pipelines
 
 First, set up the provided conda environment (`ss`) for local development, and download the embeddings:
 
@@ -18,28 +18,57 @@ conda activate ss
 
 Now we are ready to conduct the experimentation. The following works on macOS Big Sur:
 
-## Run `sequence_labeling` Baseline
+## Run `sequence_labeling` Pipeline
 
-**TODO**: Which one, though - IMN, RACL or RACL-BERT?
+**TODO**: Does it run `RACL` by default?
+
+### Train Stage
+
+**NOTE**: `get_baseline.sh` has been modified to run only on `norec`.
 
 ```sh
-cd baselines/sequence_labeling
-./get_baseline.sh # Modified to run only on norec
-cd ../..
+cd baselines/sequence_labeling; ./get_baseline.sh; cd ../..
 ```
 On $\mathtt{NoReC_{Fine}}$, `extraction_module.py` takes a total of **1h28m** (= 3 extraction targets * 10 epochs * 2m55s /epoch) to run. `relation_prediction_module.py` takes even longer to run: **2h33m** (= 10 epochs * 15m20s /epoch). All these measurements were taken on a MacBook Pro ('19 model, 2.6 GHz 6-Core Intel Core i7, 16 GB 2667 MHz DDR4).
 
 The output from `relation_prediction_module.py` at the end: `F1: 0.661`.
 
-**FIXME**: Could not triangulate this F1 in the Table 3 of the paper!
+### Test Stage
+```sh
+cd baselines/sequence_labeling; python inference.py -data norec -file dev.json; cd ../..
+```
 
-## Run `graph_parser` Baseline
+### Eval Stage
+```sh
+cd evaluation; python evaluate_single_dataset.py ../data/norec/dev.json ../baselines/sequence_labeling/saved_models/relation_prediction/norec/prediction.json; cd ..
+```
+
+The output, `Sentiment Tuple F1: 0.212`, _roughly_ triangualtes to the $\mathtt{NoReC_{Fine}}$-`RACL`-`Targeted F1` entry in Table 3 of the paper (originally, 20.1).
+
+## Run `graph_parser` Pipeline
+
+### Train Stage
+**NOTE**: `get_baseline.sh` has been modified to run only on `norec`.
 
 ```sh
-cd baselines/graph_parser
-./get_baseline.sh # Modified to run only on norec
-cd ../..
+cd baselines/graph_parser; ./get_baseline.sh; cd ../..
 ```
+
+This will make you wait. To track the progress, use: `tail -f baselines/graph_parser/logs/norec/head_final/log.txt`.
+
+On $\mathtt{NoReC_{Fine}}$, `main.py` takes **4h10m** (= 100 epochs * 2m30s /epoch). Again, this measurement was taken on a MacBook Pro ('19 model, 2.6 GHz 6-Core Intel Core i7, 16 GB 2667 MHz DDR4).
+
+### Test Stage
+```sh
+cd baselines/graph_parser; ./inference.sh sentiment_graphs/norec/head_final/dev.conllu experiments/norec/head_final/ embeddings/58.zip; cd ../..
+```
+
+### Eval Stage
+```sh
+cd evaluation; python evaluate_single_dataset.py ../data/norec/dev.json ../baselines/graph_parser/experiments/norec/head_final/dev.conllu.json; cd ..
+```
+
+The output, `Sentiment Tuple F1: 0.314`, _roughly_ triangualtes to the ${NoReC_{Fine}}$-`Head-final`-`Targeted F1` entry in Table 3 of the paper (originally, 31.9).
 
 ## LATEST NEWS
 
@@ -62,9 +91,15 @@ cd ../..
 ## Table of contents:
 
 - [SemEval-2022 Shared Task 10: Structured Sentiment Analysis](#semeval-2022-shared-task-10-structured-sentiment-analysis)
-- [Experiment Pipeline](#experiment-pipeline)
-  - [Run `sequence_labeling` Baseline](#run-sequence_labeling-baseline)
-  - [Run `graph_parser` Baseline](#run-graph_parser-baseline)
+- [Run Experiment Pipelines](#run-experiment-pipelines)
+  - [Run `sequence_labeling` Pipeline](#run-sequence_labeling-pipeline)
+    - [Train Stage](#train-stage)
+    - [Test Stage](#test-stage)
+    - [Eval Stage](#eval-stage)
+  - [Run `graph_parser` Pipeline](#run-graph_parser-pipeline)
+    - [Train Stage](#train-stage-1)
+    - [Test Stage](#test-stage-1)
+    - [Eval Stage](#eval-stage-1)
   - [LATEST NEWS](#latest-news)
   - [Table of contents:](#table-of-contents)
   - [Problem description](#problem-description)

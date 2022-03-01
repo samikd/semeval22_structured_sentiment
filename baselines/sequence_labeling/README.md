@@ -1,3 +1,5 @@
+**NOTE: Follow the README at the root, which subsumes the instructions presented herein.**
+
 ## Pipeline sequence labeling + relation classification
 Here we provide starter code for a model that first learns to extract the sub-elements (holders, targets, expressions) using sequence labelers, and then tries to classify whether or not they have a relationship.
 
@@ -29,5 +31,5 @@ bash ./get_baselines
 
 3. Perform inference on any dataset, the resulting json file will be stored as "saved_models/relation_prediction/DATASET/prediction.json"
 ```
-python3 inference.py -data opener_en -file dev.json
+python inference.py -data opener_en -file dev.json
 ```

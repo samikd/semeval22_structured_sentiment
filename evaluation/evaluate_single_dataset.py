@@ -22,8 +22,8 @@ def main():
     g = set(gold.keys())
     p = set(preds.keys())
 
-    assert g.issubset(p), f"missing some sentences: {g.difference(p)}"
-    assert p.issubset(g), f"predictions contain sentences that are not in golds: {p.difference(g)}"
+    # assert g.issubset(p), f"missing some sentences: {g.difference(p)}"
+    # assert p.issubset(g), f"predictions contain sentences that are not in golds: {p.difference(g)}"
 
     f1 = tuple_f1(gold, preds)
     print("Sentiment Tuple F1: {0:.3f}".format(f1))

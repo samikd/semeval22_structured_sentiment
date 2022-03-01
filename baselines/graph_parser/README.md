@@ -1,3 +1,5 @@
+**NOTE: Follow the README at the root, which subsumes the instructions presented herein.**
+
 ## Structured Sentiment as Dependency Graph Parsing baseline
 
 This subrepository contains the code and datasets described in following paper: [Structured Sentiment Analysis as Dependency Graph Parsing](https://aclanthology.org/2021.acl-long.263/).
