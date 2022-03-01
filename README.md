@@ -1,7 +1,45 @@
-## SemEval-2022 Shared Task 10: Structured Sentiment Analysis
+# SemEval-2022 Shared Task 10: Structured Sentiment Analysis
 
 This Github repository hosts the data and baseline models for the [SemEval-2022 shared task 10](https://competitions.codalab.org/competitions/33556) on structured sentiment. In this repository you will find the datasets, baselines, and other useful information on the shared task.
 
+# Experiment Pipeline
+
+First, set up the provided conda environment (`ss`) for local development, and download the embeddings:
+
+```sh
+./setup.sh
+```
+
+Next, activate the environment:
+
+```sh
+conda activate ss
+```
+
+Now we are ready to conduct the experimentation. The following works on macOS Big Sur:
+
+## Run `sequence_labeling` Baseline
+
+**TODO**: Which one, though - IMN, RACL or RACL-BERT?
+
+```sh
+cd baselines/sequence_labeling
+./get_baseline.sh # Modified to run only on norec
+cd ../..
+```
+On $\mathtt{NoReC_{Fine}}$, `extraction_module.py` takes a total of **1h28m** (= 3 extraction targets * 10 epochs * 2m55s /epoch) to run. `relation_prediction_module.py` takes even longer to run: **2h33m** (= 10 epochs * 15m20s /epoch). All these measurements were taken on a MacBook Pro ('19 model, 2.6 GHz 6-Core Intel Core i7, 16 GB 2667 MHz DDR4).
+
+The output from `relation_prediction_module.py` at the end: `F1: 0.661`.
+
+**FIXME**: Could not triangulate this F1 in the Table 3 of the paper!
+
+## Run `graph_parser` Baseline
+
+```sh
+cd baselines/graph_parser
+./get_baseline.sh # Modified to run only on norec
+cd ../..
+```
 
 ## LATEST NEWS
 
@@ -23,20 +61,26 @@ This Github repository hosts the data and baseline models for the [SemEval-2022 
 
 ## Table of contents:
 
-1. [Problem description](#problem-description)
-2. [Subtasks](#subtasks)
-   1. [Monolingual](#monolingual)
-      1. [Data](#data)
-   2. [Cross-lingual](#cross-lingual)
-3. [Evaluation](#evaluation)
-4. [Data format](#data-format)
-5. [Resources](#resources)
-6. [Submission via Codalab](#submission-via-codalab)
-7. [Baselines](#baselines)
-8. [Important dates](#important-dates)
-9. [Frequently Asked Questions](#frequently-asked-questions)
-10. [Task organizers](#task-organizers)
-11. [Citation](#citation)
+- [SemEval-2022 Shared Task 10: Structured Sentiment Analysis](#semeval-2022-shared-task-10-structured-sentiment-analysis)
+- [Experiment Pipeline](#experiment-pipeline)
+  - [Run `sequence_labeling` Baseline](#run-sequence_labeling-baseline)
+  - [Run `graph_parser` Baseline](#run-graph_parser-baseline)
+  - [LATEST NEWS](#latest-news)
+  - [Table of contents:](#table-of-contents)
+  - [Problem description](#problem-description)
+  - [Subtasks](#subtasks)
+    - [Monolingual](#monolingual)
+      - [Data](#data)
+    - [Cross-lingual](#cross-lingual)
+  - [Evaluation](#evaluation)
+  - [Data format](#data-format)
+  - [Resources:](#resources)
+  - [Submission via Codalab](#submission-via-codalab)
+  - [Baselines](#baselines)
+  - [Important dates](#important-dates)
+  - [Frequently asked questions](#frequently-asked-questions)
+  - [Task organizers](#task-organizers)
+  - [Citation](#citation)
 
 ## Problem description
 
