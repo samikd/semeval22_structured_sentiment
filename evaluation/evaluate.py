@@ -52,9 +52,12 @@ def convert_opinion_to_tuple(sentence):
             exp_char_idxs = opinion["Polar_expression"][1]
             polarity = opinion["Polarity"]
             #
-            holder = convert_char_offsets_to_token_idxs(holder_char_idxs, token_offsets)
-            target = convert_char_offsets_to_token_idxs(target_char_idxs, token_offsets)
-            exp = convert_char_offsets_to_token_idxs(exp_char_idxs, token_offsets)
+            holder = convert_char_offsets_to_token_idxs(
+                holder_char_idxs, token_offsets)
+            target = convert_char_offsets_to_token_idxs(
+                target_char_idxs, token_offsets)
+            exp = convert_char_offsets_to_token_idxs(
+                exp_char_idxs, token_offsets)
             opinion_tuples.append((holder, target, exp, polarity))
     return opinion_tuples
 
@@ -128,17 +131,17 @@ def tuple_precision(gold, pred, keep_polarity=True, weighted=True):
             if sent_tuples_in_list(stuple, gtuples, keep_polarity):
                 if weighted:
                     #sc = weighted_score(stuple, gtuples)
-                    #if sc != 1:
-                        #print(sent_idx)
-                        #print(sc)
-                        #print()
+                    # if sc != 1:
+                    # print(sent_idx)
+                    # print(sc)
+                    # print()
                     weighted_tp.append(weighted_score(stuple, gtuples))
                     tp.append(1)
                 else:
                     weighted_tp.append(1)
                     tp.append(1)
             else:
-                #print(sent_idx)
+                # print(sent_idx)
                 fp.append(1)
     #print("weighted tp: {}".format(sum(weighted_tp)))
     #print("tp: {}".format(sum(tp)))
@@ -214,7 +217,7 @@ def main():
         "opener_es",
         "multibooked_ca",
         "multibooked_eu"
-        ]
+    ]
 
     for subtask, datasets in [("monolingual", monolingual_datasets),
                               ("crosslingual", crosslingual_datasets)]:
@@ -225,17 +228,20 @@ def main():
 
         for dataset in datasets:
             gold_file = os.path.join(truth_dir, subtask, dataset, "test.json")
-            submission_answer_file = os.path.join(submit_dir, subtask, dataset,  "predictions.json")
+            submission_answer_file = os.path.join(
+                submit_dir, subtask, dataset,  "predictions.json")
 
             # read in gold and predicted data, convert to dictionaries
             # where the sent_ids are keys
             with open(gold_file) as infile:
                 gold = json.load(infile)
-            gold = dict([(s["sent_id"], convert_opinion_to_tuple(s)) for s in gold])
+            gold = dict([(s["sent_id"], convert_opinion_to_tuple(s))
+                        for s in gold])
 
             with open(submission_answer_file) as infile:
                 preds = json.load(infile)
-            preds = dict([(s["sent_id"], convert_opinion_to_tuple(s)) for s in preds])
+            preds = dict([(s["sent_id"], convert_opinion_to_tuple(s))
+                         for s in preds])
 
             # make sure they have the same keys
             # Todo: make the error message more useful by including the missing values
@@ -243,8 +249,10 @@ def main():
             g = set(gold.keys())
             p = set(preds.keys())
 
-            assert g.issubset(p), "missing some sentences: {}".format(g.difference(p))
-            assert p.issubset(g), "predictions contain sentences that are not in golds: {}".format(p.difference(g))
+            assert g.issubset(p), "missing some sentences: {}".format(
+                g.difference(p))
+            assert p.issubset(
+                g), "predictions contain sentences that are not in golds: {}".format(p.difference(g))
 
             f1 = tuple_f1(gold, preds)
             results.append(f1)
