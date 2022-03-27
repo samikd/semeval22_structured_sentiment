@@ -41,7 +41,7 @@ def cli():
 @click.option("--train-batch-size", default=2)
 @click.option("--num-train-epochs", default=5.0)
 @click.option("--seed", default=35)
-@click.option("--train-on-dev-set", is_flag=True)
+@click.option("--train-on-dev-set", is_flag=False)
 @trainer_args
 @click.pass_obj
 def run(common_args, **task_args):
