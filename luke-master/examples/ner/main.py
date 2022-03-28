@@ -12,6 +12,13 @@ from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 from transformers import WEIGHTS_NAME
 
+##added
+
+from itertools import groupby
+from operator import itemgetter
+##added end
+
+
 from luke.utils.entity_vocab import MASK_TOKEN
 
 from ..utils import set_seed
@@ -75,6 +82,7 @@ def run(common_args, **task_args):
         logger.info("Saving the model checkpoint to %s", args.output_dir)
         torch.save(model.state_dict(), os.path.join(args.output_dir, WEIGHTS_NAME))
 
+
     if args.local_rank not in (0, -1):
         return {}
 
@@ -92,7 +100,7 @@ def run(common_args, **task_args):
         dev_output_file = os.path.join(args.output_dir, "dev_predictions.txt")
         test_output_file = os.path.join(args.output_dir, "test_predictions.txt")
         results.update({f"dev_{k}": v for k, v in evaluate(args, model, "dev", dev_output_file).items()})
-        results.update({f"test_{k}": v for k, v in evaluate(args, model, "test", test_output_file).items()})
+        #results.update({f"test_{k}": v for k, v in evaluate(args, model, "test", test_output_file).items()})
 
     logger.info("Results: %s", json.dumps(results, indent=2, sort_keys=True))
     args.experiment.log_metrics(results)
@@ -106,10 +114,11 @@ def evaluate(args, model, fold, output_file=None):
     dataloader, examples, features, processor = load_examples(args, fold)
     label_list = processor.get_labels()
     all_predictions = defaultdict(dict)
-
     for batch in tqdm(dataloader, desc="Eval"):
+
         model.eval()
         inputs = {k: v.to(args.device) for k, v in batch.items() if k != "feature_indices"}
+
         with torch.no_grad():
             logits = model(**inputs)
 
@@ -119,13 +128,35 @@ def evaluate(args, model, fold, output_file=None):
                 if span is not None:
                     all_predictions[feature.example_index][span] = logits[i, j].detach().cpu().max(dim=0)
 
-    assert len(all_predictions) == len(examples)
+    #assert len(all_predictions) == len(examples)
 
     sent_words_list = []
     sent_labels_list = []
     sent_predictions_list = []
 
+    #added
+    #added
+    all_predcited_information = []
+    #added end
+
     for example_index, example in enumerate(examples):
+        print('example_index',example_index)
+
+       # added
+        pred_span_list = []
+        # added
+        pred_label_list = []
+        # added
+        predicted_span = {}
+        predicted_span['targ'] = []
+        predicted_span['holder'] = []
+        predicted_span['exp'] = []
+
+        #added
+        example_sent_words_list = []
+
+
+
         predictions = all_predictions[example_index]
         doc_results = []
         for span, (max_logit, max_index) in predictions.items():
@@ -134,6 +165,20 @@ def evaluate(args, model, fold, output_file=None):
 
         predicted_sequence = ["O"] * len(example.words)
         for _, span, label in sorted(doc_results, key=lambda o: o[0], reverse=True):
+            
+            #added
+            #print('span',span, 'label',label)
+            pred_span_list.append(span[0])
+            
+            pred_label_list.append(label)
+            #predicted_span[label].append(span[0])
+
+            predicted_span[label].append(span)
+
+
+            
+
+
             if all([o == "O" for o in predicted_sequence[span[0] : span[1]]]):
                 predicted_sequence[span[0]] = "B-" + label
                 if span[1] - span[0] > 1:
@@ -142,16 +187,94 @@ def evaluate(args, model, fold, output_file=None):
         for sent_index in range(len(example.sentence_boundaries) - 1):
             sent_start, sent_end = example.sentence_boundaries[sent_index : sent_index + 2]
             sent_words_list.append(example.words[sent_start:sent_end])
+            #added
+            example_sent_words_list.append(example.words[sent_start:sent_end])
+            #added end
             sent_predictions_list.append(predicted_sequence[sent_start:sent_end])
             sent_labels_list.append(example.labels[sent_start:sent_end])
 
+
+        all_info_dict = {}     
+        predicted_tuples_dict = {}
+        predicted_span_back ={}
+
+
+
+        predicted_span_backup = predicted_span
+        for tuple_type in predicted_span_backup.keys():
+
+            if tuple_type =='targ':
+                tuple_name = 'Target'
+            elif tuple_type =='exp':
+                tuple_name = 'Polar_expression'
+            elif tuple_type =='holder':
+                tuple_name = 'Source'
+
+
+
+            if len(predicted_span_backup[tuple_type]) > 0:
+                ###predicted_span_back[tuple_type] = [list(map(itemgetter(1), g)) for k, g in groupby(enumerate(sorted(predicted_span[tuple_type])), lambda i_x: i_x[0] - i_x[1])]
+                
+                predicted_span_back[tuple_type] = sorted(predicted_span[tuple_type], key=lambda x: x[1])
+
+                
+                predicted_spans_list = []
+                predicted_text_list = []
+
+                for spans in predicted_span_back[tuple_type]:
+   
+                    start_span_index = spans[0]
+                    end_span_index = spans[1]
+
+                    predicted_text = ' '.join(example_sent_words_list[0][start_span_index:end_span_index])
+
+                    start_char_span = 0 if start_span_index ==0 else len(' '.join(example_sent_words_list[0][:start_span_index]))+1
+                    end_char_span = len(' '.join(example_sent_words_list[0][:end_span_index]))
+
+                    predicted_span_index = str(start_char_span)+':'+str(end_char_span)
+                    predicted_text_list.append(predicted_text)
+                    predicted_spans_list.append(predicted_span_index)
+                predicted_tuples_dict[tuple_name] = [predicted_text_list, predicted_spans_list]
+
+
+            else:
+                predicted_tuples_dict[tuple_name] = [[],[]]
+
+        predicted_tuples_dict["Polarity"]=  "Positive"
+        predicted_tuples_dict["Intensity"]= "Average"
+
+
+
+        #print(example_sent_words_list)
+        #print(' '.join(example_sent_words_list[0]))
+
+        all_info_dict["sent_id"] = example_index
+        all_info_dict["text"] = ' '.join(example_sent_words_list[0])
+        all_info_dict["opinions"] =[predicted_tuples_dict]
+        #print('all_info_dict', all_info_dict)
+
+        all_predcited_information.append(all_info_dict)
+
+    save_json_path = args.output_dir+'/'+args.output_dir.split('_')[-1]
+    with open(save_json_path+'_predicted_span_dev.json', 'w') as f:
+        json.dump(all_predcited_information, f)
+    print('write into json succesfull')
+
+
+        #added end
+
+
+
+        ### saving sapns commendted below
     # convert IOB2 -> IOB1
-    prev_type = None
-    for sent_predictions in sent_predictions_list:
-        for n, label in enumerate(sent_predictions):
-            if label[0] == "B" and label[2:] != prev_type:
-                sent_predictions[n] = "I" + label[1:]
-            prev_type = label[2:]
+    
+    # prev_type = None
+    # for sent_predictions in sent_predictions_list:
+    #     for n, label in enumerate(sent_predictions):
+    #         #change not equal to equals
+    #         if label[0] == "B" and label[2:] == prev_type:
+    #             sent_predictions[n] = "I" + label[1:]
+    #         prev_type = label[2:]
 
     if output_file:
         with open(output_file, "w") as f:
@@ -162,7 +285,8 @@ def evaluate(args, model, fold, output_file=None):
                     f.write(f"{word} {label} {prediction}\n")
                 f.write("\n")
 
-    print(seqeval.metrics.classification_report(sent_labels_list, sent_predictions_list, digits=4))
+
+    #print(seqeval.metrics.classification_report(sent_labels_list, sent_predictions_list, digits=4))
 
     return dict(
         f1=seqeval.metrics.f1_score(sent_labels_list, sent_predictions_list),
@@ -182,16 +306,21 @@ def load_examples(args, fold):
         examples = processor.get_dev_examples(args.data_dir)
     else:
         examples = processor.get_test_examples(args.data_dir)
+        print('test examples', examples)
 
     if fold == "train" and args.train_on_dev_set:
         examples += processor.get_dev_examples(args.data_dir)
 
     label_list = processor.get_labels()
 
+    #print('label_list from training set', label_list)
+
     logger.info("Creating features from the dataset...")
     features = convert_examples_to_features(
         examples, label_list, args.tokenizer, args.max_seq_length, args.max_entity_length, args.max_mention_length
     )
+
+    #print('converted features', features)
 
     if args.local_rank == 0 and fold == "train":
         torch.distributed.barrier()
