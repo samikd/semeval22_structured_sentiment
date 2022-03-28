@@ -21,16 +21,13 @@ python convert_data_to_bio.py
 
 The output of the above script will be saved in ``semeval_bio_data`` folder
 #### Step2: 
-Run the following script
+Run the following script. This only takes ```darmstadt_univs``` data, for other dataset change ```data_path``` in th code. 
 ```bash
 python prepare_training_dataset.py
 ```
 ### Fine Tuning Stage
-```sh
-cd luke-master; python inference.py -data norec -file dev.json; cd ../..
-```
 
-**Fine-tuning the model:**
+Run the foloowing in order to fine-tune the model
 
 ```bash
 $ python -m examples.cli\
@@ -55,4 +52,4 @@ The following will produce predicted json file for dev.json using fine tuned che
     --checkpoint-file=<OUTPUT_DIR>/pytorch_model.bin \
     --no-train
 ```
-The produced predicted json filw will be further used by LUKE span prediction model as a next step of the pipeline.
+The produced predicted json file saved in ```OUTPUT_DIR``` will be further used by LUKE span prediction model as a next step of the pipeline.
